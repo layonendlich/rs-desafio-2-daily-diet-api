@@ -1,0 +1,25 @@
+{
+  "name": "daily-diet-api",
+  "version": "0.0.1",
+  "description": "API para registro e acompanhamento da dieta de um ou mais usuários",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/layonendlich/rs-desafio-2-daily-diet-api.git"
+  },
+  "keywords": [
+    "Desafio",
+    "RocketSeat",
+    "Node.js",
+    "Typescript"
+  ],
+  "author": "Layon Endlich Rodrigues",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/layonendlich/rs-desafio-2-daily-diet-api/issues"
+  },
+  "homepage": "https://github.com/layonendlich"
+}

@@ -1,6 +1,6 @@
 # Daily diet API
 
-> DESAFIO: contruir uma API para registro e acompanhamento da dieta de um ou mais usuários
+> DESAFIO: construir uma API para registro e acompanhamento da dieta de um ou mais usuários
 
 Mais sobre o projeto:
 
