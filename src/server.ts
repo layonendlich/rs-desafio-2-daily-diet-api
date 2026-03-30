@@ -1,1 +1,10 @@
-console.log("Hello world");
+import { app } from "./app";
+
+app.listen({
+    port: 3000,
+    host: '0.0.0.0'
+})
+.then(() => {
+    console.log('HTTP server running on port', 3000)
+    console.log(`http://localhost:3000`)
+})
