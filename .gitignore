@@ -6,3 +6,6 @@ dist
 
 # Environment variables
 .env
+
+# Database and logs
+db/*.db

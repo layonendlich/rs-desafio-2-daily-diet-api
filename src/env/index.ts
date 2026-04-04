@@ -7,7 +7,7 @@ const envSchema = z.object({
     SERVICE_PORT: z.coerce.number().default(3000),
     SERVICE_HOST: z.string().default('0.0.0.0'),
 
-    DATABASE_CLIENT: z.enum(['sqlite']).default('sqlite'),
+    DATABASE_CLIENT: z.enum(['mysql', 'pg', 'sqlite']).default('sqlite'),
     DATABASE_URL: z.string().default('./db/app.db'),
     DATABASE_MIGRATIONS: z.string().default('./db/migrations')
 })
