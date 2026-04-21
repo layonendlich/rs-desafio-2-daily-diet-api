@@ -2,15 +2,7 @@ import { FastifyInstance } from "fastify";
 import { knex } from "../database";
 import { z } from 'zod'
 import argon2 from "argon2";
-
-const userBodySchema = z.object({
-    username: z.string().default(''),
-    password: z.string().default(''),
-    name: z.string().default(''),
-    avatar: z.string().nullable().default(null),
-    createdAt: z.string().nullable().default(null),
-    updatedAt: z.string().nullable().default(null)
-})
+import { User, UserInterface } from "../models/user.model";
 
 async function encryptPassword (password: string) {
     return await argon2.hash(password)
@@ -20,65 +12,52 @@ export async function users (app: FastifyInstance) {
 
     /** CRETE */
     app.post('/', async (request, reply) => {
+        const user = new User()
 
-        const { username, password, name, avatar } = userBodySchema.parse(
+        const { key, password, name } = user.schema().parse(
             typeof request.body === 'string' ? JSON.parse(request.body) : request.body
         )
 
-        const user = {
-            username,
-            password,
-            name,
-            avatar
-        }
+        user.key = key
+        user.name = name
+        await user.setPassword(password)
 
-        for (const field of ['username', 'password', 'name']) {
-            if (!user[field].length) {
-                return reply
-                    .status(400)
-                    .send({
-                        errorMessage: `${field} is required`,
-                        ofensorElelement: field,
-                    })
+        try {
+            const res = await user.save()
+
+            if (!res) {
+                return reply.status(400).send({errors: user.getErrors()})
             }
+
+            return reply.status(201).send({ user: user })
+        } catch (error) {
+            console.error('Error saving user:', error)
+            return reply.status(500).send({
+                errorMessage: 'Error saving user',
+            })
         }
 
-        user.password = await encryptPassword(user.password)
-
-        let res = await knex('users').where({ username })
-
-        if (res.length) {
-            return reply
-                .status(409)
-                .send({
-                    errorMessage: `User '${username}' already exists`,
-                    ofensorElelement: 'username',
-                })
-        }
-
-        res = await knex('users').insert(user).returning('*')
-
-        return reply.status(201).send({ user: res[0] })
     })
 
 
 
     /** READ BY ID */
-    app.get('/:username', async (request, reply) => {
-        const { username } = request.params as { username: string }
+    app.get('/:key', async (request, reply) => {
+        const { key } = new User().schema().parse(request.params)
 
-        const user = await knex('users').where({ username }).first()
+        const user = new User()
+        await user.getByKey(key)
 
-        if (!user) {
+        if (!user.id) {
             return reply
                 .status(404)
                 .send({
-                    errorMessage: `User '${username}' not found`,
-                    ofensorElelement: 'username',
+                    errors: [{
+                        errorMessage: `User '${key}' not found`,
+                        ofensorElement: 'key',
+                    }]
                 })
         }
-
-        delete user.password
 
         return reply.send({ user })
     })
@@ -87,7 +66,7 @@ export async function users (app: FastifyInstance) {
 
     /** READ */
     app.get('/', async (request, reply) => {
-        const res = await knex('users').select()
+        const res = await knex('users').select('')
 
         for (const user of res) {
             delete user.password
@@ -99,38 +78,29 @@ export async function users (app: FastifyInstance) {
 
 
     /** UPDATE */
-    app.patch('/:username', async (request, reply) => {
-        const { username } = request.params as { username: string }
+    app.patch('/:key', async (request, reply) => {
+        const { key } = new User().schema().parse(request.params)
 
-        const user = await knex('users').where({ username }).first()
+        const user = new User()
+        await user.getByKey(key)
 
-        if (!user) {
+        if (!user.id) {
             return reply
                 .status(404)
                 .send({
-                    errorMessage: `User '${username}' not found`,
-                    ofensorElelement: 'username',
+                    errors: [{
+                        errorMessage: `User '${key}' not found`,
+                        ofensorElement: 'key',
+                    }]
                 })
         }
 
-        const data = userBodySchema.partial().parse(
+        const data = user.schema().partial().parse(
             typeof request.body === 'string' ? JSON.parse(request.body) : request.body
         )
 
-        if (data.username && user.username !== data.username) {
-            let res = await knex('users').where({ username: data.username }).first()
-            if (res) {
-                return reply
-                    .status(409)
-                    .send({
-                        errorMessage: `User '${data.username}' already exists`,
-                        ofensorElelement: 'username',
-                    })
-            }
-        }
-
         let modifications = 0
-        for (const field of ['username', 'name']) {
+        for (const field of ['key', 'name'] as (keyof UserInterface)[]) {
             if (data[field] && data[field].length && user[field] !== data[field]) {
                 user[field] = data[field]
                 modifications++
@@ -142,40 +112,60 @@ export async function users (app: FastifyInstance) {
             return reply.send({ user })
         }
 
-        user.updatedAt = new Date().toISOString()
-
-        let res = await knex('users').where({ id: user.id }).update(user).returning('*')
-
-        return reply.send({ user: res[0] })
+        try {
+            const res = await user.save()
+    
+            if (!res) {
+                return reply.status(400).send({errors: user.getErrors()})
+            }
+    
+            delete user.password
+            delete user.errors
+    
+            return reply.status(200).send({ user: user })
+        } catch (error) {
+            console.error('Error saving user:', error)
+            return reply.status(500).send({
+                errorMessage: 'Error saving user',
+            })
+        }
     })
 
 
 
     /** DELETE */
-    app.delete('/:username', async (request, reply) => {
-        const { username } = request.params as { username: string }
+    app.delete('/:key', async (request, reply) => {
+        const { key } = new User().schema().parse(request.params)
 
-        const user = await knex('users').where({ username }).first()
+        const user = new User()
+        await user.getByKey(key)
 
-        if (!user) {
+        if (!user.id) {
             return reply
                 .status(404)
                 .send({
-                    errorMessage: `User '${username}' not found`,
-                    ofensorElelement: 'username',
+                    errors: [{
+                        errorMessage: `User '${key}' not found`,
+                        ofensorElement: 'key',
+                    }]
                 })
         }
 
-        await knex('users').where({ id: user.id }).del()
-
-        return reply.status(204).send()
+        try {
+            return reply.status(204).send(await user.delete())
+        } catch (error) {
+            console.error('Error deleting user:', error)
+            return reply.status(500).send({
+                errorMessage: 'Error deleting user',
+            })
+        }
     })
 
 
 
     /** PASSWORD CHANGE */
-    app.post('/:username/password', async (request, reply) => {
-        const { username } = request.params as { username: string }
+    app.post('/:key/password', async (request, reply) => {
+        const { key } = request.params as { key: string }
         const {currentPassword, newPassword} = z.object({
             currentPassword: z.string().default(''),
             newPassword: z.string().default('')
@@ -188,7 +178,7 @@ export async function users (app: FastifyInstance) {
                 .status(400)
                 .send({
                     errorMessage: 'Current password is required',
-                    ofensorElelement: 'currentPassword',
+                    ofensorElement: 'currentPassword',
                 })
         }
 
@@ -197,18 +187,18 @@ export async function users (app: FastifyInstance) {
                 .status(400)
                 .send({
                     errorMessage: 'New password is required',
-                    ofensorElelement: 'newPassword',
+                    ofensorElement: 'newPassword',
                 })
         }
 
-        const user = await knex('users').where({ username }).first()
+        const user = await knex('users').where({ key }).first()
 
         if (!user) {
             return reply
                 .status(404)
                 .send({
-                    errorMessage: `User '${username}' not found`,
-                    ofensorElelement: 'username',
+                    errorMessage: `User '${key}' not found`,
+                    ofensorElement: 'key',
                 })
         }
 
@@ -217,7 +207,7 @@ export async function users (app: FastifyInstance) {
                 .status(403)
                 .send({
                     errorMessage: 'Current password is incorrect',
-                    ofensorElelement: 'currentPassword',
+                    ofensorElement: 'currentPassword',
                 })
         }
 
