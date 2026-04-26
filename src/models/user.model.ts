@@ -228,7 +228,7 @@ export class User implements UserInterface {
         
         let invalidChars = ''
         for (let x = 0; x < password.length; x++) {
-            if (password.charCodeAt(x) < 32 || password.charCodeAt(x) > 126) {
+            if (password.charCodeAt(x) < 32 || password.charCodeAt(x) > 255) {
                 invalidChars+= password.charAt(x)
             }
         }
@@ -241,13 +241,13 @@ export class User implements UserInterface {
         }
 
         this.#password = await argon2.hash(password)
-        return this.password
+        return this.#password
     }
 
 
 
     async verifyPassword (password: string) {
-        return await argon2.verify(this.password, password)
+        return await argon2.verify(this.#password, password)
     }
 
 

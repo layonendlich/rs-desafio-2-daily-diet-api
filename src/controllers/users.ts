@@ -1,12 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { knex } from "../database";
 import { z } from 'zod'
-import argon2 from "argon2";
 import { User, UserInterface } from "../models/user.model";
-
-async function encryptPassword (password: string) {
-    return await argon2.hash(password)
-}
 
 export async function users (app: FastifyInstance) {
 
@@ -191,7 +186,8 @@ export async function users (app: FastifyInstance) {
                 })
         }
 
-        const user = await knex('users').where({ key }).first()
+        const user = new User()
+        await user.getByKey(key)
 
         if (!user) {
             return reply
@@ -202,7 +198,7 @@ export async function users (app: FastifyInstance) {
                 })
         }
 
-        if (!(await argon2.verify(user.password, currentPassword))) {
+        if (!(await user.verifyPassword(currentPassword))) {
             return reply
                 .status(403)
                 .send({
@@ -211,11 +207,18 @@ export async function users (app: FastifyInstance) {
                 })
         }
 
-        user.password = await encryptPassword(newPassword)
-        user.updatedAt = new Date().toISOString()
+        try {
+            await user.setPassword(newPassword)
+            await user.save()
+        } catch (error) {
+            return reply
+                .status(400)
+                .send({
+                    errorMessage: error.errorMessage || 'Error changing password',
+                    ofensorElement: 'newPassword',
+                })
+        }
 
-        await knex('users').where({ id: user.id }).update(user)
-
-        return reply.status(201).send({ success: true })
+        return reply.status(200).send({ success: true, user })
     })
 }
