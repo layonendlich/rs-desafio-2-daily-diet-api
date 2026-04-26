@@ -1,6 +1,5 @@
 import { FastifyInstance } from "fastify";
 import { User } from "../models/user.model";
-import crypto from 'crypto'
 
 export async function signup (app: FastifyInstance) {
 
