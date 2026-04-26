@@ -5,6 +5,10 @@ import { User, UserInterface } from "../models/user.model";
 
 export async function users (app: FastifyInstance) {
 
+    app.addHook('preHandler', async (request) => {
+        console.log(new Date().toISOString(), `[${request.method}] ${request.url}`)
+    })
+
     /** CRETE */
     app.post('/', async (request, reply) => {
         const user = new User()
