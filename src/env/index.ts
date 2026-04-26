@@ -22,8 +22,8 @@ const envSchema = z.object({
     PASSWORD_MIN_SYMBOLS: z.coerce.number().default(0), // 0 means no minimum symbols
 
     // Login definitions
-    MAX_FAILED_LOGIN_ATTEMPTS: z.coerce.number().default(5),
-    BLOCK_DURATION_MINUTES: z.coerce.number().default(15)
+    MAX_FAILED_LOGIN_ATTEMPTS: z.coerce.number().default(0), // 0 means no limit
+    BLOCK_DURATION_MINUTES: z.coerce.number().default(0) // 0 means no block duration
 })
 
 const _env = envSchema.safeParse(process.env)

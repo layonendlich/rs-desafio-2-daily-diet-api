@@ -79,6 +79,7 @@ export class User implements UserInterface {
             this.avatar = res.avatar
             this.failedLoginAttempts = res.failedLoginAttempts
             this.blocked = res.blocked
+            this.blockedTill = res.blockedTill
             this.inactivated = res.inactivated
             this.createdAt = res.createdAt
             this.updatedAt = res.updatedAt
@@ -99,6 +100,7 @@ export class User implements UserInterface {
             this.avatar = res.avatar
             this.failedLoginAttempts = res.failedLoginAttempts
             this.blocked = res.blocked
+            this.blockedTill = res.blockedTill
             this.inactivated = res.inactivated
             this.createdAt = res.createdAt
             this.updatedAt = res.updatedAt
