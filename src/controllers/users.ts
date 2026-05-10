@@ -225,4 +225,17 @@ export async function users (app: FastifyInstance) {
 
         return reply.status(200).send({ success: true, user })
     })
+
+
+    /** USERS'S SESSIONS */
+    app.get('/:key/sessions', async (request, reply) => {
+        const { key } = new User().schema().parse(request.params)
+        const user = new User()
+        await user.getByKey(key)
+
+        const res = await knex('sessions')
+            .where({ userId: user.id})
+
+        return reply.send({ sessions: res })
+    })
 }
