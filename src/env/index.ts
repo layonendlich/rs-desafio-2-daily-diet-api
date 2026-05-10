@@ -23,7 +23,11 @@ const envSchema = z.object({
 
     // Login definitions
     MAX_FAILED_LOGIN_ATTEMPTS: z.coerce.number().default(0), // 0 means no limit
-    BLOCK_DURATION_MINUTES: z.coerce.number().default(0) // 0 means no block duration
+    BLOCK_DURATION_MINUTES: z.coerce.number().default(0), // 0 means no block duration
+    
+    // Session definitions
+    SESSION_MAX_INACTIVE_DAYS: z.coerce.number().default(1), // 1 means 1 day
+    SESSION_MAX_SIMULTANEOUS_SESSIONS: z.coerce.number().default(0), // 0 means no limit
 })
 
 const _env = envSchema.safeParse(process.env)

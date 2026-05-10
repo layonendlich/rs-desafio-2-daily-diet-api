@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { User } from "../models/user.model";
+import { Session } from "../models/sessions.model";
 import { env } from "../env";
 
 export async function auth (app: FastifyInstance) {
@@ -94,10 +95,20 @@ export async function auth (app: FastifyInstance) {
             await user.save()
         }
 
+        const session = new Session()
+        session.userId = user.id
+        await session.save()
+
         console.log(new Date().toISOString(), `User ${key} logged in successfully`)
 
         reply.cookie('daily_diet_user_key', user.key, {
             httpOnly: true,
+            path: '/',
+        })
+
+        reply.cookie('daily_diet_session', session.key, {
+            httpOnly: true,
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
             path: '/',
         })
 
@@ -109,6 +120,12 @@ export async function auth (app: FastifyInstance) {
             httpOnly: true, 
             path: '/',
         })
+
+        reply.clearCookie('daily_diet_session', {
+            httpOnly: true,
+            path: '/',
+        })
+
         return reply.status(200).send({ message: 'Logged out successfully' })
     })
 }

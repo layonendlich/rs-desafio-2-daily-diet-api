@@ -14,6 +14,15 @@ declare module 'knex/types/tables' {
             inactivated: boolean,
             createdAt: string,
             updatedAt: string
+        },
+
+        sessions: {
+            id: number,
+            key: string,
+            userId: number,
+            isFinished: boolean,
+            createdAt: string,
+            updatedAt: string
         }
     }
 }
