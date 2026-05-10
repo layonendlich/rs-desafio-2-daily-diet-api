@@ -233,9 +233,25 @@ export async function users (app: FastifyInstance) {
         const user = new User()
         await user.getByKey(key)
 
-        const res = await knex('sessions')
-            .where({ userId: user.id})
+        if (!user.id) {
+            return reply
+                .status(404)
+                .send({
+                    errorMessage: `User '${key}' not found`,
+                    ofensorElement: 'key',
+                })
+        }
 
-        return reply.send({ sessions: res })
+        try {
+            const res = await knex('sessions')
+                .where({ userId: user.id})
+    
+            return reply.send({ sessions: res })
+        } catch (error) {
+            console.error('Error fetching user sessions:', error)
+            return reply.status(500).send({
+                errorMessage: 'Error fetching user sessions',
+            })
+        }
     })
 }
