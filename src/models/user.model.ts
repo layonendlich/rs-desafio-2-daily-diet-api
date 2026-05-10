@@ -29,7 +29,7 @@ export class User implements UserInterface {
     public  inactivated: boolean
     public  createdAt: string
     public  updatedAt: string
-    #errors: Array<{ errorMessage: string, ofensorElement: string }>
+    #errors: Array<{ errorMessage: string, ofensorElement: string | null }>
     [key: string]: any
 
 
@@ -70,43 +70,59 @@ export class User implements UserInterface {
 
 
     async getById (id: number) {
-        const res = await knex('users').where({ id }).first()
-        if (res) {
-            this.id = res.id
-            this.key = res.key
-            this.#password = res.password
-            this.name = res.name
-            this.avatar = res.avatar
-            this.failedLoginAttempts = res.failedLoginAttempts
-            this.blocked = res.blocked
-            this.blockedTill = res.blockedTill
-            this.inactivated = res.inactivated
-            this.createdAt = res.createdAt
-            this.updatedAt = res.updatedAt
-            return this
+        try {
+            const res = await knex('users').where({ id }).first()
+            if (res) {
+                this.id = res.id
+                this.key = res.key
+                this.#password = res.password
+                this.name = res.name
+                this.avatar = res.avatar
+                this.failedLoginAttempts = res.failedLoginAttempts
+                this.blocked = res.blocked
+                this.blockedTill = res.blockedTill
+                this.inactivated = res.inactivated
+                this.createdAt = res.createdAt
+                this.updatedAt = res.updatedAt
+                return this
+            }
+            return false
+        } catch (error) {
+            console.log(new Date().toISOString(), `Error fetching user by id:\n`, error)
+            throw ({
+                errorMessage: 'Error fetching user by id',
+                ofensorElement: null,
+            })
         }
-        return false
     }
 
 
 
     async getByKey (key: string) {
-        const res = await knex('users').where({ key }).first()
-        if (res) {
-            this.id = res.id
-            this.key = res.key
-            this.#password = res.password
-            this.name = res.name
-            this.avatar = res.avatar
-            this.failedLoginAttempts = res.failedLoginAttempts
-            this.blocked = res.blocked
-            this.blockedTill = res.blockedTill
-            this.inactivated = res.inactivated
-            this.createdAt = res.createdAt
-            this.updatedAt = res.updatedAt
-            return this
+        try {
+            const res = await knex('users').where({ key }).first()
+            if (res) {
+                this.id = res.id
+                this.key = res.key
+                this.#password = res.password
+                this.name = res.name
+                this.avatar = res.avatar
+                this.failedLoginAttempts = res.failedLoginAttempts
+                this.blocked = res.blocked
+                this.blockedTill = res.blockedTill
+                this.inactivated = res.inactivated
+                this.createdAt = res.createdAt
+                this.updatedAt = res.updatedAt
+                return this
+            }
+            return false
+        } catch (error) {
+            console.log(new Date().toISOString(), `Error fetching user by key:\n`, error)
+            throw ({
+                errorMessage: 'Error fetching user by key',
+                ofensorElement: null,
+            })
         }
-        return false
     }
 
 
@@ -163,9 +179,13 @@ export class User implements UserInterface {
                 this.id = res[0].id
             }
             return this
+            
         } catch (error) {
-            console.error('Error saving user:', error)
-            throw new Error('Error saving user')
+            console.log(new Date().toISOString(), `Error saving user:\n`, error)
+            throw ({
+                errorMessage: 'Error saving user',
+                ofensorElement: null,
+            })
         }
     }
 
@@ -179,8 +199,17 @@ export class User implements UserInterface {
             })
         }
 
-        await knex('users').where({ id: this.id }).del()
-        return true
+        try {
+            await knex('users').where({ id: this.id }).del()
+            return true
+        } catch (error) {
+            console.log(new Date().toISOString(), 'Failed to delete user:\n', error)
+            throw ({
+                errorMessage: 'Failed to delete user',
+                ofensorElement: null,
+            })
+        }
+
     }
 
 
