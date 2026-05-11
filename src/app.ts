@@ -3,15 +3,21 @@ import { users } from './controllers/users'
 import { signup } from './controllers/signup'
 import cookie from '@fastify/cookie'
 import { auth } from './controllers/auth'
+import { sessionControl } from './middleware/sessionControl'
 
 export const app = fastify()
 
 app.register(cookie)
+app.addHook('preHandler', async (request, reply) => {
+    await sessionControl(request, reply)
+})
+
 app.register(signup, { prefix: '/signup' })
 app.register(auth)
 app.register(users, { prefix: '/users' })
 
-app.get('/', () => {
-    return 'Hello world'
+
+app.get('/', (request) => {
+    return { message: 'Hello World!' }
 })
 

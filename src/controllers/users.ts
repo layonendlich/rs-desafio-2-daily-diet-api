@@ -2,15 +2,18 @@ import { FastifyInstance } from "fastify";
 import { knex } from "../database";
 import { z } from 'zod'
 import { User, UserInterface } from "../models/user.model";
+import { onlyAuthenticated } from "../middleware/onlyAuthenticated";
+import { onlyAdmin } from "../middleware/onlyAdmin";
 
 export async function users (app: FastifyInstance) {
 
-    app.addHook('preHandler', async (request) => {
+    app.addHook('preHandler', async (request, reply) => {
         console.log(new Date().toISOString(), `[${request.method}] ${request.url}`)
+        onlyAuthenticated(request, reply)
     })
 
     /** CRETE */
-    app.post('/', async (request, reply) => {
+    app.post('/', { preHandler: [onlyAdmin] }, async (request, reply) => {
         const user = new User()
 
         const { key, password, name } = user.schema().parse(
@@ -44,6 +47,15 @@ export async function users (app: FastifyInstance) {
     app.get('/:key', async (request, reply) => {
         const { key } = new User().schema().parse(request.params)
 
+        if (request.currentSession?.userKey !== key && !request.currentSession?.isAdmin) {
+            return reply
+                .status(403)
+                .send({
+                    errorMessage: `You are not authorized to view this user's information`,
+                    ofensorElement: 'key'
+                })
+        }
+
         const user = new User()
         await user.getByKey(key)
 
@@ -64,7 +76,7 @@ export async function users (app: FastifyInstance) {
 
 
     /** READ */
-    app.get('/', async (request, reply) => {
+    app.get('/', { preHandler: [onlyAdmin] }, async (request, reply) => {
         const res = await knex('users').select('')
 
         for (const user of res) {
@@ -79,6 +91,15 @@ export async function users (app: FastifyInstance) {
     /** UPDATE */
     app.patch('/:key', async (request, reply) => {
         const { key } = new User().schema().parse(request.params)
+
+        if (request.currentSession?.userKey !== key && !request.currentSession?.isAdmin) {
+            return reply
+                .status(403)
+                .send({
+                    errorMessage: `You are not authorized to update this user's information`,
+                    ofensorElement: 'key'
+                })
+        }
 
         const user = new User()
         await user.getByKey(key)
@@ -133,7 +154,7 @@ export async function users (app: FastifyInstance) {
 
 
     /** DELETE */
-    app.delete('/:key', async (request, reply) => {
+    app.delete('/:key', { preHandler: [onlyAdmin] }, async (request, reply) => {
         const { key } = new User().schema().parse(request.params)
 
         const user = new User()
@@ -172,6 +193,15 @@ export async function users (app: FastifyInstance) {
             typeof request.body === 'string' ? JSON.parse(request.body) : request.body
         )
 
+        if (request.currentSession?.userKey !== key && !request.currentSession?.isAdmin) {
+            return reply
+                .status(403)
+                .send({
+                    errorMessage: `You are not authorized to change this user's password`,
+                    ofensorElement: 'key'
+                })
+        }
+
         if (!currentPassword.length) {
             return reply
                 .status(400)
@@ -193,7 +223,7 @@ export async function users (app: FastifyInstance) {
         const user = new User()
         await user.getByKey(key)
 
-        if (!user) {
+        if (!user.id) {
             return reply
                 .status(404)
                 .send({
@@ -202,13 +232,29 @@ export async function users (app: FastifyInstance) {
                 })
         }
 
-        if (!(await user.verifyPassword(currentPassword))) {
-            return reply
-                .status(403)
-                .send({
-                    errorMessage: 'Current password is incorrect',
-                    ofensorElement: 'currentPassword',
-                })
+        if (user.key == request.currentSession?.userKey) {
+            if (!(await user.verifyPassword(currentPassword))) {
+                return reply
+                    .status(403)
+                    .send({
+                        errorMessage: 'Current password is incorrect',
+                        ofensorElement: 'currentPassword',
+                    })
+            }
+        }
+
+        if (user.key !== request.currentSession?.userKey) {
+            const currentUser = new User()
+            await currentUser.getByKey(key)
+
+            if (!(await currentUser.verifyPassword(currentPassword))) {
+                return reply
+                    .status(403)
+                    .send({
+                        errorMessage: 'Current password is incorrect',
+                        ofensorElement: 'currentPassword',
+                    })
+            }
         }
 
         try {
@@ -230,6 +276,16 @@ export async function users (app: FastifyInstance) {
     /** USERS'S SESSIONS */
     app.get('/:key/sessions', async (request, reply) => {
         const { key } = new User().schema().parse(request.params)
+
+        if (request.currentSession?.userKey !== key && !request.currentSession?.isAdmin) {
+            return reply
+                .status(403)
+                .send({
+                    errorMessage: `You are not authorized to view this user's sessions`,
+                    ofensorElement: 'key'
+                })
+        }
+
         const user = new User()
         await user.getByKey(key)
 

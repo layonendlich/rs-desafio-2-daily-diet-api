@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { User } from "../models/user.model";
 import { Session } from "../models/sessions.model";
 import { env } from "../env";
+import { onlyAuthenticated } from "../middleware/onlyAuthenticated";
 
 export async function auth (app: FastifyInstance) {
 
@@ -115,11 +116,15 @@ export async function auth (app: FastifyInstance) {
         return reply.status(200).send({ user: user })
     })
 
-    app.get('/logout', async (request, reply) => {
-        reply.clearCookie('daily_diet_user_key', {
-            httpOnly: true, 
-            path: '/',
-        })
+    app.get('/logout', {preHandler: [onlyAuthenticated]}, async (request, reply) => {
+
+        const session = new Session()
+        await session.getById(request.currentSession.id)
+
+        if (session) {
+            session.isFinished = true
+            await session.save()
+        }
 
         reply.clearCookie('daily_diet_session', {
             httpOnly: true,
