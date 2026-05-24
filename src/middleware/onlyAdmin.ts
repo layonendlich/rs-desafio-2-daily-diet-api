@@ -1,3 +1,5 @@
+import { FastifyReply, FastifyRequest } from 'fastify'
+
 export function onlyAdmin (request: FastifyRequest, reply: FastifyReply, done = () => {}) {
     if (!request.currentSession) {
         console.log(new Date().toISOString(), `Unauthorized`)

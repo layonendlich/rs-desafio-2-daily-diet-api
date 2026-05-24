@@ -1,9 +1,12 @@
 import fastify from 'fastify'
-import { users } from './controllers/users'
-import { signup } from './controllers/signup'
 import cookie from '@fastify/cookie'
-import { auth } from './controllers/auth'
 import { sessionControl } from './middleware/sessionControl'
+
+/* ROUTE CONTROLLERS */
+import { signup } from './controllers/signup'
+import { auth } from './controllers/auth'
+import { users } from './controllers/users'
+import { sessions } from './controllers/sessions'
 
 export const app = fastify()
 
@@ -15,6 +18,8 @@ app.addHook('preHandler', async (request, reply) => {
 app.register(signup, { prefix: '/signup' })
 app.register(auth)
 app.register(users, { prefix: '/users' })
+app.register(sessions, { prefix: '/sessions' })
+
 
 
 app.get('/', (request) => {

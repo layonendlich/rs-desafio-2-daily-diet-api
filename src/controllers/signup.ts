@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { User } from "../models/user.model";
+import { Session } from "../models/sessions.model";
 
 export async function signup (app: FastifyInstance) {
 
@@ -24,9 +25,21 @@ export async function signup (app: FastifyInstance) {
             if (!res) {
                 return reply.status(400).send({errors: user.getErrors()})
             }
-    
+
+            const session = new Session()
+            session.userId = user.id
+            await session.save()
+
+            console.log(new Date().toISOString(), `User ${key} logged in successfully`)
+
             reply.cookie('daily_diet_user_key', user.key, {
                 httpOnly: true,
+                path: '/',
+            })
+
+            reply.cookie('daily_diet_session', session.key, {
+                httpOnly: true,
+                maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
                 path: '/',
             })
 
