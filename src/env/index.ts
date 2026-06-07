@@ -9,9 +9,15 @@ const envSchema = z.object({
     SERVICE_HOST: z.string().default('0.0.0.0'),
 
     // Database definitions
-    DATABASE_CLIENT: z.enum(['mysql', 'pg', 'sqlite']).default('sqlite'),
-    DATABASE_URL: z.string().default('./db/app.db'),
+    DATABASE_CLIENT: z.enum(['mysql2', 'pg', 'sqlite']).default('sqlite'),
     DATABASE_MIGRATIONS: z.string().default('./db/migrations'),
+    DATABASE_URL: z.string().default('./db/app.db'),
+    DATABASE_HOST: z.string().default('127.0.0.1'),
+    DATABASE_PORT: z.coerce.number().default(3306),
+    DATABASE_USER: z.string().default('root'),
+    DATABASE_PASSWORD: z.string().default(''),
+    DATABASE_NAME: z.string().default('daily_diet_api'),
+    DATABASE_SSL: z.coerce.boolean().default(false),
 
     // Password definitions
     PASSWORD_MIN_LENGTH: z.coerce.number().default(0), // 0 means no minimum length

@@ -4,17 +4,25 @@ import { env } from './env'
 var dbConnection: Object | String | null = null
 
 switch (env.DATABASE_CLIENT) {
-    case 'mysql':
+    case 'mysql2':
          dbConnection = {
-            host: '127.0.0.1',
-            port: 3306,
-            user: 'your_database_user',
-            password: 'your_database_password',
-            database: 'myapp_test',
+            host: env.DATABASE_HOST,
+            port: env.DATABASE_PORT,
+            user: env.DATABASE_USER,
+            password: env.DATABASE_PASSWORD,
+            database: env.DATABASE_NAME,
          }
          break
     case 'pg':
-        dbConnection = env.DATABASE_URL
+        dbConnection = {
+            connectionString: env.DATABASE_URL,
+            host: env.DATABASE_HOST,
+            port: env.DATABASE_PORT,
+            user: env.DATABASE_USER,
+            password: env.DATABASE_PASSWORD,
+            database: env.DATABASE_NAME,
+            ssl: env.DATABASE_SSL ? { rejectUnauthorized: false } : false,
+        }
         break
     case 'sqlite':
         dbConnection = {
