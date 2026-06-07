@@ -14,15 +14,7 @@ switch (env.DATABASE_CLIENT) {
          }
          break
     case 'pg':
-        dbConnection = {
-            connectionString: env.DATABASE_URL,
-            host: env.DATABASE_HOST,
-            port: env.DATABASE_PORT,
-            user: env.DATABASE_USER,
-            password: env.DATABASE_PASSWORD,
-            database: env.DATABASE_NAME,
-            ssl: env.DATABASE_SSL ? { rejectUnauthorized: false } : false,
-        }
+        dbConnection = `postgresql://${env.DATABASE_USER}:${env.DATABASE_PASSWORD}@${env.DATABASE_HOST}:${env.DATABASE_PORT}/${env.DATABASE_NAME}`
         break
     case 'sqlite':
         dbConnection = {
