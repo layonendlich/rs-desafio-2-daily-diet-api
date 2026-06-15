@@ -29,7 +29,7 @@ async function getSession (sessionKey: string, userKey: string) {
 
 
 export async function sessionControl (request: FastifyRequest, reply: FastifyReply, done = () => {}) {
-    if (!request.cookies.daily_diet_session) {
+    if (!request.cookies.daily_diet_session || request.cookies.daily_diet_user_key === undefined) {
         return request.currentSession = null
     }
 
