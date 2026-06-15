@@ -98,6 +98,8 @@ export class Session implements SessionInterface {
 
 
     async save () {
+        const currentDate = new Date().toISOString().replace('T', ' ').slice(0, 19)
+
         if (!this.userId) {
             this.#errors.push({
                 errorMessage: 'Session must be associated with a user',
@@ -108,7 +110,7 @@ export class Session implements SessionInterface {
 
         try {
             if (this.id) {
-                this.updatedAt = new Date().toISOString()
+                this.updatedAt = currentDate
     
                 const res = await knex('sessions').where({ id: this.id }).update({
                     key: this.key,
@@ -128,15 +130,15 @@ export class Session implements SessionInterface {
                         for (let i = env.SESSION_MAX_SIMULTANEOUS_SESSIONS - 1; i < activeSessions.length; i++) {
                             await knex('sessions').where({ id: activeSessions[i].id }).update({
                                 isFinished: true,
-                                updatedAt: new Date().toISOString()
+                                updatedAt: currentDate
                             })
                         }
                     }
                 }
     
                 this.key = crypto.randomUUID()
-                this.createdAt = new Date().toISOString()
-                this.updatedAt = new Date().toISOString()
+                this.createdAt = currentDate
+                this.updatedAt = currentDate
                 
                 const res = await knex('sessions').insert({
                     key: this.key,
@@ -144,7 +146,7 @@ export class Session implements SessionInterface {
                     isFinished: this.isFinished,
                     createdAt: this.createdAt,
                     updatedAt: this.updatedAt
-                })
+                }).returning('id')
                 if (res) {
                     this.id = res[0]
                     return this
@@ -155,11 +157,13 @@ export class Session implements SessionInterface {
 
         } catch (error) {
             console.log(new Date().toISOString(), `Error saving session:\n`, error)
-            
-            throw ({
+
+            this.#errors.push({
                 errorMessage: 'Error saving session',
                 ofensorElement: null,
             })
+            
+            return false
         }
     }
 

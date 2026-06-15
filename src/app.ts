@@ -20,8 +20,6 @@ app.register(auth)
 app.register(users, { prefix: '/users' })
 app.register(sessions, { prefix: '/sessions' })
 
-
-
 app.get('/', (request) => {
     return { message: 'Hello World!' }
 })

@@ -101,6 +101,7 @@ export class User implements UserInterface {
     async getByKey (key: string) {
         try {
             const res = await knex('users').where({ key }).first()
+            console.log(res)
             if (res) {
                 this.id = res.id
                 this.key = res.key
@@ -140,13 +141,15 @@ export class User implements UserInterface {
 
 
     async save () {
+        const currentDate = new Date().toISOString().replace('T', ' ').slice(0, 19)
+        
         if (!await this.validate()) {
             return false
         }
 
         try {
             if (this.id) {
-                this.updatedAt = new Date().toISOString()
+                this.updatedAt = currentDate
 
                 await knex('users').where({ id: this.id }).update({
                     key: this.key,
@@ -161,8 +164,8 @@ export class User implements UserInterface {
                     updatedAt: this.updatedAt
                 })
             } else {
-                this.createdAt = new Date().toISOString()
-                this.updatedAt = new Date().toISOString()
+                this.createdAt = currentDate
+                this.updatedAt = currentDate
                 
                 const res = await knex('users').insert({
                     key: this.key,
@@ -176,16 +179,20 @@ export class User implements UserInterface {
                     createdAt: this.createdAt,
                     updatedAt: this.updatedAt
                 }).returning('id')
-                this.id = res[0].id
+                this.id = res[0]
+
             }
             return this
             
         } catch (error) {
             console.log(new Date().toISOString(), `Error saving user:\n`, error)
-            throw ({
+
+            this.#errors.push({
                 errorMessage: 'Error saving user',
                 ofensorElement: null,
             })
+
+            return false
         }
     }
 

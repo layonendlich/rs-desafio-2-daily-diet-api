@@ -11,6 +11,7 @@ const envSchema = z.object({
     // Database definitions
     DATABASE_CLIENT: z.enum(['mysql2', 'pg', 'sqlite']).default('sqlite'),
     DATABASE_MIGRATIONS: z.string().default('./db/migrations'),
+    DATABASE_RUN_MIGRATIONS: z.coerce.boolean().default(false),
     DATABASE_URL: z.string().default('./db/app.db'),
     DATABASE_HOST: z.string().default('127.0.0.1'),
     DATABASE_PORT: z.coerce.number().default(3306),

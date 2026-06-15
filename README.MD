@@ -56,7 +56,7 @@ Em ambos os casos, o ambiente deve ser configurado com as variáveis de ambiente
 - SQLite
 
 <details>
-<summary>Execução diretamente no _host_</summary>
+<summary>Execução diretamente no host</summary>
 
 **Preparação do ambiente**
 
@@ -101,5 +101,5 @@ npm run start
 </details>
 
 <details>
-<summary>Execução em _containers_ Docker</summary>
+<summary>Execução em containers Docker</summary>
 </details>

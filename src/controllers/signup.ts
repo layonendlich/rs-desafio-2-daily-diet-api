@@ -30,6 +30,14 @@ export async function signup (app: FastifyInstance) {
             session.userId = user.id
             await session.save()
 
+            if (!session.id) {
+                console.log(session.getErrors())
+                console.log(new Date().toISOString(), `Error creating session for user ${user.key} after signup`)
+                return reply.status(500).send({
+                    errorMessage: 'Error creating session after signup',
+                })
+            }
+
             console.log(new Date().toISOString(), `User ${key} logged in successfully`)
 
             reply.cookie('daily_diet_user_key', user.key, {
