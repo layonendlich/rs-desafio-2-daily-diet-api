@@ -1,0 +1,22 @@
+name: daily-diet
+
+services:
+
+  api:
+    container_name: daily-diet-api
+    build:
+      context: .
+    ports:
+      - "3000:3000"
+    environment:
+      # Service configuration
+      - SERVICE_PORT=3000
+
+      # MySQL configuration
+      - DATABASE_RUN_MIGRATIONS=true
+      - DATABASE_CLIENT=mysql2
+      - DATABASE_HOST=localhost
+      - DATABASE_PORT=3306
+      - DATABASE_USER=root
+      - DATABASE_PASSWORD=root
+      - DATABASE_NAME=daily_diet_api
